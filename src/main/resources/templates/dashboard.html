@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CallPipeline Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<main class="shell">
+    <header class="topbar">
+        <div>
+            <p class="eyebrow">CallPipeline</p>
+            <h1>Appointment Operations</h1>
+        </div>
+        <form class="search" method="get" th:action="@{/dashboard}">
+            <label for="callerPhone">Caller phone</label>
+            <div class="search-row">
+                <input id="callerPhone" name="callerPhone" th:value="${callerPhone}" placeholder="+91 9876543210">
+                <button type="submit">Search</button>
+                <a class="secondary-link" th:href="@{/dashboard}">Clear</a>
+            </div>
+        </form>
+    </header>
+
+    <section class="metrics" aria-label="Appointment metrics">
+        <article class="metric">
+            <span>Total</span>
+            <strong th:text="${totalCount}">0</strong>
+        </article>
+        <article class="metric">
+            <span>Requested</span>
+            <strong th:text="${requestedCount}">0</strong>
+        </article>
+        <article class="metric">
+            <span>Cancelled</span>
+            <strong th:text="${cancelledCount}">0</strong>
+        </article>
+        <article class="metric">
+            <span>Completed</span>
+            <strong th:text="${completedCount}">0</strong>
+        </article>
+    </section>
+
+    <section class="workspace">
+        <aside class="panel">
+            <h2>Create Appointment</h2>
+            <form class="stack" method="post" th:action="@{/dashboard/appointments}" th:object="${appointmentForm}">
+                <label>
+                    Name
+                    <input th:field="*{callerName}" required placeholder="Ananya Rao">
+                </label>
+                <label>
+                    Phone
+                    <input th:field="*{callerPhone}" required placeholder="+91 9876543210">
+                </label>
+                <label>
+                    Email
+                    <input th:field="*{callerEmail}" type="email" placeholder="ananya@example.com">
+                </label>
+                <label>
+                    Reason
+                    <input th:field="*{reason}" required placeholder="Dental cleaning">
+                </label>
+                <label>
+                    Preferred date/time
+                    <input th:field="*{preferredDateTime}" placeholder="Friday afternoon">
+                </label>
+                <button type="submit">Create</button>
+            </form>
+        </aside>
+
+        <section class="table-panel" aria-label="Appointment records">
+            <div class="table-header">
+                <h2>Records</h2>
+                <code>/api/webhooks/livekit</code>
+            </div>
+
+            <div class="empty-state" th:if="${#lists.isEmpty(appointments)}">
+                No appointments found.
+            </div>
+
+            <div class="table-wrap" th:if="${!#lists.isEmpty(appointments)}">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Caller</th>
+                        <th>Reason</th>
+                        <th>Preferred Time</th>
+                        <th>Status</th>
+                        <th>Summary</th>
+                        <th>Manage</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="appointment : ${appointments}">
+                        <td>
+                            <strong th:text="${appointment.callerName}">Caller Name</strong>
+                            <span th:text="${appointment.callerPhone}">Phone</span>
+                            <span th:if="${appointment.callerEmail}" th:text="${appointment.callerEmail}">Email</span>
+                        </td>
+                        <td th:text="${appointment.reason}">Reason</td>
+                        <td th:text="${appointment.preferredDateTime ?: 'Not set'}">Preferred Time</td>
+                        <td>
+                            <span class="status" th:text="${appointment.status}">REQUESTED</span>
+                        </td>
+                        <td class="summary" th:text="${appointment.conversationSummary ?: 'No summary yet'}">Summary</td>
+                        <td>
+                            <form class="inline-form" method="post"
+                                  th:action="@{/dashboard/appointments/{id}/status(id=${appointment.id})}">
+                                <input type="hidden" name="callerPhone" th:value="${appointment.callerPhone}">
+                                <select name="status">
+                                    <option th:each="status : ${statuses}"
+                                            th:value="${status}"
+                                            th:text="${status}"
+                                            th:selected="${status == appointment.status}">
+                                        REQUESTED
+                                    </option>
+                                </select>
+                                <button type="submit">Save</button>
+                            </form>
+                            <form class="inline-form" method="post"
+                                  th:if="${appointment.status.name() != 'CANCELLED'}"
+                                  th:action="@{/dashboard/appointments/{id}/cancel(id=${appointment.id})}">
+                                <input type="hidden" name="callerPhone" th:value="${appointment.callerPhone}">
+                                <button class="danger" type="submit">Cancel</button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </section>
+</main>
+</body>
+</html>

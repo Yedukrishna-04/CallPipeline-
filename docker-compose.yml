@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: callpipeline-postgres
+    environment:
+      POSTGRES_DB: callpipeline
+      POSTGRES_USER: callpipeline
+      POSTGRES_PASSWORD: callpipeline
+    ports:
+      - "5432:5432"
+    volumes:
+      - callpipeline-postgres:/var/lib/postgresql/data
+
+volumes:
+  callpipeline-postgres:

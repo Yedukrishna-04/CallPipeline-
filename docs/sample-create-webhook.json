@@ -1,0 +1,24 @@
+{
+  "job_id": "job_123",
+  "room_id": "room_123",
+  "room": "browser-demo",
+  "intent": "CREATE_APPOINTMENT",
+  "summary": "The caller requested a dental cleaning appointment for Friday afternoon.",
+  "results": {
+    "name": {
+      "value": "Ananya Rao"
+    },
+    "phone": {
+      "value": "+91 9876543210"
+    },
+    "email": {
+      "value": "ananya@example.com"
+    },
+    "reason_for_visit": {
+      "value": "Dental cleaning"
+    },
+    "preferred_date_time": {
+      "value": "Friday afternoon"
+    }
+  }
+}
