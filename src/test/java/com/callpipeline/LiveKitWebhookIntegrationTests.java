@@ -45,7 +45,7 @@ class LiveKitWebhookIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.operation").value("CREATE_APPOINTMENT"))
                 .andExpect(jsonPath("$.appointment.callerName").value("Ananya Rao"))
-                .andExpect(jsonPath("$.appointment.callerPhone").value("+91 9876543210"))
+                .andExpect(jsonPath("$.appointment.callerPhone").value("9876543210"))
                 .andExpect(jsonPath("$.appointment.reason").value("Dental cleaning"));
     }
 }

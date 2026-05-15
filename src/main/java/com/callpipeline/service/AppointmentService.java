@@ -20,9 +20,11 @@ import java.util.UUID;
 public class AppointmentService {
 
     private final AppointmentRepository appointmentRepository;
+    private final PhoneNumberNormalizer phoneNumberNormalizer;
 
-    public AppointmentService(AppointmentRepository appointmentRepository) {
+    public AppointmentService(AppointmentRepository appointmentRepository, PhoneNumberNormalizer phoneNumberNormalizer) {
         this.appointmentRepository = appointmentRepository;
+        this.phoneNumberNormalizer = phoneNumberNormalizer;
     }
 
     @Transactional(readOnly = true)
@@ -35,27 +37,29 @@ public class AppointmentService {
 
     @Transactional(readOnly = true)
     public List<Appointment> findByCallerPhone(String callerPhone) {
-        if (!StringUtils.hasText(callerPhone)) {
+        String normalizedPhone = phoneNumberNormalizer.normalize(callerPhone);
+        if (!StringUtils.hasText(normalizedPhone)) {
             return List.of();
         }
-        return appointmentRepository.findByCallerPhoneOrderByCreatedAtDesc(callerPhone.trim());
+        return appointmentRepository.findByCallerPhoneOrderByCreatedAtDesc(normalizedPhone);
     }
 
     @Transactional(readOnly = true)
     public Appointment getAppointmentForCaller(UUID id, String callerPhone) {
-        requireCallerPhone(callerPhone);
-        return appointmentRepository.findFirstByIdAndCallerPhone(id, callerPhone.trim())
+        String normalizedPhone = requireCallerPhone(callerPhone);
+        return appointmentRepository.findFirstByIdAndCallerPhone(id, normalizedPhone)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Appointment not found for caller"));
     }
 
     @Transactional(readOnly = true)
     public Optional<Appointment> findWebhookTarget(UUID appointmentId, String callerPhone) {
-        if (appointmentId != null && StringUtils.hasText(callerPhone)) {
-            return appointmentRepository.findFirstByIdAndCallerPhone(appointmentId, callerPhone.trim());
+        String normalizedPhone = phoneNumberNormalizer.normalize(callerPhone);
+        if (appointmentId != null && StringUtils.hasText(normalizedPhone)) {
+            return appointmentRepository.findFirstByIdAndCallerPhone(appointmentId, normalizedPhone);
         }
-        if (StringUtils.hasText(callerPhone)) {
+        if (StringUtils.hasText(normalizedPhone)) {
             return appointmentRepository.findFirstByCallerPhoneAndStatusNotOrderByCreatedAtDesc(
-                    callerPhone.trim(),
+                    normalizedPhone,
                     AppointmentStatus.CANCELLED
             );
         }
@@ -90,7 +94,7 @@ public class AppointmentService {
     public Appointment createFromWebhook(ExtractedAppointmentData data, String jobId, String roomId, String roomName, String rawPayload) {
         Appointment appointment = new Appointment();
         appointment.setCallerName(defaultValue(data.callerName(), "Unknown caller"));
-        appointment.setCallerPhone(defaultValue(data.callerPhone(), "Unknown phone"));
+        appointment.setCallerPhone(defaultValue(phoneNumberNormalizer.normalize(data.callerPhone()), "Unknown phone"));
         appointment.setCallerEmail(emptyToNull(data.callerEmail()));
         appointment.setReason(defaultValue(data.reason(), "Appointment request"));
         appointment.setPreferredDateTime(emptyToNull(data.preferredDateTime()));
@@ -135,7 +139,7 @@ public class AppointmentService {
     private void applyRequest(Appointment appointment, AppointmentRequestDto request, boolean requireDefaults) {
         if (requireDefaults) {
             appointment.setCallerName(defaultValue(request.getCallerName(), "Unknown caller"));
-            appointment.setCallerPhone(defaultValue(request.getCallerPhone(), "Unknown phone"));
+            appointment.setCallerPhone(defaultValue(phoneNumberNormalizer.normalize(request.getCallerPhone()), "Unknown phone"));
             appointment.setReason(defaultValue(request.getReason(), "Appointment request"));
         } else {
             updateIfPresent(request.getCallerName(), appointment::setCallerName);
@@ -157,10 +161,12 @@ public class AppointmentService {
         updateIfPresent(rawPayload, appointment::setRawWebhookPayload);
     }
 
-    private void requireCallerPhone(String callerPhone) {
-        if (!StringUtils.hasText(callerPhone)) {
+    private String requireCallerPhone(String callerPhone) {
+        String normalizedPhone = phoneNumberNormalizer.normalize(callerPhone);
+        if (!StringUtils.hasText(normalizedPhone)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "callerPhone is required for user-specific appointment access");
         }
+        return normalizedPhone;
     }
 
     private String defaultValue(String value, String fallback) {

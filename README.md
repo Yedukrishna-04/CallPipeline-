@@ -123,25 +123,25 @@ List appointments:
 
 ```http
 GET /api/appointments
-GET /api/appointments?callerPhone=+91%209876543210
+GET /api/appointments?callerPhone=9876543210
 ```
 
 Fetch a user-specific appointment:
 
 ```http
-GET /api/appointments/{id}?callerPhone=+91%209876543210
+GET /api/appointments/{id}?callerPhone=9876543210
 ```
 
 Update:
 
 ```http
-PUT /api/appointments/{id}?callerPhone=+91%209876543210
+PUT /api/appointments/{id}?callerPhone=9876543210
 ```
 
 Cancel:
 
 ```http
-POST /api/appointments/{id}/cancel?callerPhone=+91%209876543210
+POST /api/appointments/{id}/cancel?callerPhone=9876543210
 ```
 
 LiveKit webhook:

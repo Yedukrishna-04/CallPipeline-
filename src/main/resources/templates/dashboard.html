@@ -16,7 +16,7 @@
         <form class="search" method="get" th:action="@{/dashboard}">
             <label for="callerPhone">Caller phone</label>
             <div class="search-row">
-                <input id="callerPhone" name="callerPhone" th:value="${callerPhone}" placeholder="+91 9876543210">
+                <input id="callerPhone" name="callerPhone" th:value="${callerPhone}" placeholder="9876543210" inputmode="numeric">
                 <button type="submit">Search</button>
                 <a class="secondary-link" th:href="@{/dashboard}">Clear</a>
             </div>
@@ -52,7 +52,7 @@
                 </label>
                 <label>
                     Phone
-                    <input th:field="*{callerPhone}" required placeholder="+91 9876543210">
+                    <input th:field="*{callerPhone}" required placeholder="9876543210" inputmode="numeric">
                 </label>
                 <label>
                     Email
